@@ -9,6 +9,7 @@ typedef struct Node {
 } Node;
 
 Node *head;
+/* 헤드포인트 말고 헤드노드로 구현해보자 */
 
 bool append(int newData) {
     Node *newNode = malloc(sizeof(Node));
