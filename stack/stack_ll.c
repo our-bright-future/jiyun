@@ -1,57 +1,82 @@
 #include <stdio.h>
-#include <limits.h>
 #include <stdbool.h>
 #include <stdlib.h>
 
-#define STACK_LEGTH 5
-#define EMPTY (-1)
-#define STACK_EMPTY INT_MIN // 뭐든지 정해놓은 규칙대로 선언하면 된다.
-
 typedef struct node {
-    int value;
+    char data;
     struct node *next;
 } node;
 
-// 구조체 포인터(스택의 주소를 가리킨다)
-typedef node *stack;
+typedef node *top;
 
-// 스택의 주소(구조체 포인터)를 가져오기 위해 이중포인터가 파라미터로 들어간다
-bool push(stack *mystack, int value) {
+node *initStack(top *stackTop) {
+    *stackTop = NULL;
+    return *stackTop;
+}
+/* -> 생략하고, main에서 선언과 동시에 NULL로 초기화해도 될 것 같은데
+필요한 경우는 뭐가 있을까? */ 
+
+
+void push(top *stackTop, char c) {
     node *newnode = malloc(sizeof(node));
-    
-    if (newnode == NULL) return false;
+    if (newnode == NULL) {return ;}
 
-    newnode -> value = value;
-    newnode -> next = *mystack; 
-    // *mystack은 'node **'(aka 'stack *')의 역참조의 역참조 즉, 스택의 주소값이다.
-    *mystack = newnode;
-    return true;
+    newnode -> data = c;
+    newnode -> next = *stackTop;
+    *stackTop = newnode;
 }
 
-int pop(stack *mystack) {
-    if (*mystack == NULL) return STACK_EMPTY;
+char pop(top *stackTop) {
+    if (*stackTop == NULL) {
+        printf("It's empty");
+        return 0;
+    }
 
-    int result = (*mystack) -> value;
-    node *tmp = *mystack;
-    *mystack = (*mystack) -> next;
+    char target = (*stackTop) -> data;
+    node *tmp = *stackTop;
+    *stackTop = (*stackTop) -> next;
     free(tmp);
-    return result;
+    return target;
+}
+
+char peek(top *stackTop) {
+    if (*stackTop == NULL) {
+        printf("It's empty");
+        return 0;
+    }
+    return (*stackTop) -> data;
+}
+
+void print(top *stackTop) {
+    if (*stackTop == NULL) {
+        printf("It's empty");
+        return ;
+    }
+    node *tmp = *stackTop;
+    while(tmp != NULL) {
+        printf("%c-", tmp -> data);
+        tmp = tmp -> next;
+    }
+    printf("\n");
 }
 
 int main() {
-    stack s1 = NULL, s2 = NULL, s3 = NULL;
-    push(&s1, 56);
-    push(&s2, 78);
-    push(&s2, 13);
-    push(&s2, 98);
+    top *stackTop;
+    char *str = "olleH";
 
-    int a;
-    while ((a = pop(&s2)) != STACK_EMPTY) {
-        printf("a = %d\n", a);
+    initStack(stackTop);
+
+    while (*str != '\0') {
+        push(stackTop, *str);
+        str++;
     }
-    /*
-    t = 98
-    t = 13
-    t = 78
-    */
+    print(stackTop);
+    // H-e-l-l-o-
+
+    pop(stackTop);
+    print(stackTop);
+    // e-l-l-o-
+
+    peek(stackTop);
+    // e
 }
