@@ -16,7 +16,6 @@ queue *init_queue(queue *myQueue, int size) {
     myQueue -> max = size;
     myQueue -> f = 0;
     myQueue -> r = (myQueue -> max)-1;
-    return myQueue;
 }
 
 bool is_empty(queue *myQueue) {
