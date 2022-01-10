@@ -122,6 +122,7 @@ void print(node *rootNode) {
     print(rootNode -> right); 
 }
 
+// 잘 돌아가는지 확인 안해봄
 int main() {
     node *rootNode = NULL;
 
