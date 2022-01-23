@@ -20,7 +20,7 @@ typedef struct Edge { // 간선 노드
 } Edge;
 
 typedef struct Inc { // 부착 간선 -한 정점에 연결된 간선- 노드
-    struct Edge *edge;
+    struct Edge *edge; 
     struct Inc *link;
 } Inc;
 
@@ -41,7 +41,7 @@ int getDesVertex(int v, Edge *e);
 Graph *creatGraph();
 void insertVertex(Graph *g, int v);
 void insertEdge(Graph *g, int u, int v, int weight);
-void insertInc(Graph *g, int u, int v);
+void insertInc(Graph *g, int u, int v, int weight);
 void deleteVertex(Graph *g, int v);
 void deleteEdge(Graph *g, int u, int v);
 void deleteInc(Graph *g, Vertex *v_node, Edge *e_node);
@@ -95,13 +95,51 @@ void insertVertex(Graph *g, int v) {
         while (curr -> link != NULL) {
             curr = curr -> link;
         }
+        vx -> link = curr -> link;
         curr -> link = vx;
     }
 }
 
-void insertInc(Graph *g, int u, int v) {
+void insertInc(Graph *g, int u, int v, int weight) {
     Inc *i = getIncNode();
-    
+    i -> edge -> u = u;
+    i -> edge -> v = v; 
+    i -> edge -> weight = weight;
+    i -> link = NULL;
+
+    Vertex *vxcurr = g -> vertex;
+    while (vxcurr -> link != NULL) {
+        if (vxcurr -> v == u) {
+            if (vxcurr -> header == NULL) { //Inc가 아직 없을 때
+                vxcurr -> header = i;
+            } else {
+                Inc *iccurr = vxcurr -> header;
+                while (iccurr -> link != NULL) {
+                    if ((iccurr -> edge -> v) < v && (iccurr -> link -> edge -> v) > v) {
+                        break ;
+                    }
+                    iccurr = iccurr -> link;
+                }
+                i -> link = iccurr -> link;
+                iccurr -> link = i;
+            }
+        }
+        vxcurr = vxcurr -> link;
+    }
+    // 일치하는 정점이 리스트 마지막에 있을 경우
+    if (vxcurr -> header == NULL) { //Inc가 아직 없을 때
+        vxcurr -> header = i;
+    } else {
+        Inc *iccurr = vxcurr -> header;
+        while (iccurr -> link != NULL) {
+            if ((iccurr -> edge -> v) < v && (iccurr -> link -> edge -> v) > v) {
+                break ;
+            }
+            iccurr = iccurr -> link;
+        }
+        i -> link = iccurr -> link;
+        iccurr -> link = i;
+    }
 }
 
 void insertEdge(Graph *g, int u, int v, int weight) {
@@ -109,25 +147,20 @@ void insertEdge(Graph *g, int u, int v, int weight) {
     e -> u = u;
     e -> v = v;
     e -> weight = weight;
-
-    Vertex *curr = g -> vertex;
-    while (curr -> link != NULL) {
-        if (curr -> v == u) {
-            insertInc(g, u, v);
-        }
-        curr = curr -> link;
-    }
-    // 일치하는 정점이 리스트 마지막에 있을 경우
-    if (curr -> v == u) {
-        insertInc(g, u, v);
-    }
+    e -> link = NULL;
 
     if(g -> edge == NULL) {
         g -> edge = e;
-        e -> link = NULL;
     } else {
+        Edge *curr = g -> edge;
+        while (curr -> link != NULL) {
+            curr = curr -> link;
+        }
+        e -> link = curr -> link;
+        curr -> link = e;
     }
-    
+    // 자 이제 해당 간선과 연관된 부착간선을 설정해보자
+    insertInc(g, u, v, weight);
 }
 
 int main() {
