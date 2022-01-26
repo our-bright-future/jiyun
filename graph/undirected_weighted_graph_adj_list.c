@@ -159,8 +159,54 @@ void insertEdge(Graph *g, int u, int v, int weight) {
         e -> link = curr -> link;
         curr -> link = e;
     }
-    // 자 이제 해당 간선과 연관된 부착간선을 설정해보자
+    // 자 이제 해당 간선과 연관된 인접리스트를 설정해보자
     insertInc(g, u, v, weight);
+}
+
+/* 정점을 delete할 때 연관된 edge나 inc를 먼저 삭제(free)해야하는 것 아닌가?!???!!!!!??!!? 
+-> 맞음!!!!! 대신 그렇게 했을 때 수행 성능이 저하되므로 '비활성화' 방식을 택할 수도 있다 (어떻게.. 하는데..) */
+void deleteVertex(Graph *g, int v) {
+    Vertex *vxCurr = g -> vertex;
+    // 지우고자 하는 타겟 정점이 첫 번째 정점일 때
+    if (vxCurr -> v == v) {
+        Edge *eCurr = g -> edge;
+        while (eCurr -> link) {
+            if (eCurr -> u == v) {
+                break ;
+            }
+            eCurr = eCurr -> link;
+        }
+        deleteEdge(g, eCurr -> u, eCurr -> v); // 노드 포인터를 전달하는게 낫지 않나
+        deleteInc(g, vxCurr, eCurr);
+
+        g -> vertex = vxCurr -> link;
+        free(vxCurr);
+        return ;
+    }
+    // 그 외
+    while (vxCurr -> link -> link != NULL) {
+        if (vxCurr -> link -> v == v) {
+            break ;
+        }
+        vxCurr = vxCurr -> link;
+    }
+    Edge *eCurr = g -> edge;
+    while (eCurr -> link) {
+        if (eCurr -> u == v) {
+            break ;
+        }
+        eCurr = eCurr -> link;
+    }
+    deleteEdge(g, eCurr -> u, eCurr -> v);
+    deleteInc(g, vxCurr, eCurr);
+
+    vxCurr -> link = vxCurr -> link -> link;
+    free(vxCurr);
+    return ;
+}
+
+void deleteEdge(Graph *g, int u, int v) {
+
 }
 
 int main() {
