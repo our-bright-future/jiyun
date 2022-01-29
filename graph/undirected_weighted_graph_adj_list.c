@@ -101,44 +101,78 @@ void insertVertex(Graph *g, int v) {
 }
 
 void insertInc(Graph *g, int u, int v, int weight) {
-    Inc *i = getIncNode();
-    i -> edge -> u = u;
-    i -> edge -> v = v; 
-    i -> edge -> weight = weight;
-    i -> link = NULL;
+    Inc *i_u = getIncNode();
+    Inc *i_v = getIncNode();
+    i_u -> edge -> u = u;
+    i_u -> edge -> v = v; 
 
-    Vertex *vxcurr = g -> vertex;
-    while (vxcurr -> link != NULL) {
-        if (vxcurr -> v == u) {
-            if (vxcurr -> header == NULL) { //Inc가 아직 없을 때
-                vxcurr -> header = i;
+    i_v -> edge -> u = v;
+    i_v -> edge -> v = u;
+    i_u -> edge -> weight = i_v -> edge -> weight = weight;
+    i_u -> link = i_v -> link = NULL;
+
+    Vertex *vxCurr = g -> vertex;
+    while (vxCurr -> link != NULL) {
+        if (vxCurr -> v == u) {
+            if (vxCurr -> header == NULL) { //Inc가 아직 없을 때
+                vxCurr -> header = i_u;
             } else {
-                Inc *iccurr = vxcurr -> header;
-                while (iccurr -> link != NULL) {
-                    if ((iccurr -> edge -> v) < v && (iccurr -> link -> edge -> v) > v) {
+                Inc *iCurr = vxCurr -> header;
+                while (iCurr -> link != NULL) {
+                    if ((iCurr -> edge -> v) < v && (iCurr -> link -> edge -> v) > v) {
                         break ;
                     }
-                    iccurr = iccurr -> link;
+                    iCurr = iCurr -> link;
                 }
-                i -> link = iccurr -> link;
-                iccurr -> link = i;
+                i_u -> link = iCurr -> link;
+                iCurr -> link = i_u;
+            }
+        } else if (vxCurr -> v == v) {
+            if (vxCurr -> header == NULL) { //Inc가 아직 없을 때
+                vxCurr -> header = i_v;
+            } else {
+                Inc *iCurr = vxCurr -> header;
+                while (iCurr -> link != NULL) {
+                    if ((iCurr -> edge -> v) < v && (iCurr -> link -> edge -> v) > v) {
+                        break ;
+                    }
+                    iCurr = iCurr -> link;
+                }
+                i_v -> link = iCurr -> link;
+                iCurr -> link = i_v;
             }
         }
-        vxcurr = vxcurr -> link;
+        vxCurr = vxCurr -> link;
     }
     // 일치하는 정점이 리스트 마지막에 있을 경우
-    if (vxcurr -> header == NULL) { //Inc가 아직 없을 때
-        vxcurr -> header = i;
-    } else {
-        Inc *iccurr = vxcurr -> header;
-        while (iccurr -> link != NULL) {
-            if ((iccurr -> edge -> v) < v && (iccurr -> link -> edge -> v) > v) {
-                break ;
+    if (vxCurr -> v == u) {
+        if (vxCurr -> header == NULL) { //Inc가 아직 없을 때
+            vxCurr -> header = i_u;
+        } else {
+            Inc *iCurr = vxCurr -> header;
+            while (iCurr -> link != NULL) {
+                if ((iCurr -> edge -> v) < v && (iCurr -> link -> edge -> v) > v) {
+                    break ;
+                }
+                iCurr = iCurr -> link;
             }
-            iccurr = iccurr -> link;
+            i_u -> link = iCurr -> link;
+            iCurr -> link = i_u;
         }
-        i -> link = iccurr -> link;
-        iccurr -> link = i;
+    } else if (vxCurr -> v == v) {
+        if (vxCurr -> header == NULL) { //Inc가 아직 없을 때
+            vxCurr -> header = i_v;
+        } else {
+            Inc *iCurr = vxCurr -> header;
+            while (iCurr -> link != NULL) {
+                if ((iCurr -> edge -> v) < v && (iCurr -> link -> edge -> v) > v) {
+                    break ;
+                }
+                iCurr = iCurr -> link;
+            }
+            i_v -> link = iCurr -> link;
+            iCurr -> link = i_v;
+        }
     }
 }
 
@@ -163,6 +197,33 @@ void insertEdge(Graph *g, int u, int v, int weight) {
     insertInc(g, u, v, weight);
 }
 
+void deleteInc(Graph *g, Vertex *v_node, Edge *e_node) {
+    
+}
+
+void deleteEdge(Graph *g, int u, int v) {
+    Edge *eCurr = g -> edge;
+    // 지우고자 하는 타겟 간선이 첫 번째 간선일 때
+    if (eCurr -> u == u && eCurr -> v == v) {
+        g -> edge = eCurr -> link;
+        free(eCurr);
+        return ;
+    }
+    // 중간
+    while (eCurr -> link != NULL) {
+        if (eCurr -> link -> u == u && eCurr -> link -> v == v) {
+            eCurr -> link = eCurr -> link -> link;
+            return ;
+        }
+        eCurr = eCurr -> link;
+    }
+    // 마지막
+    if (eCurr -> u == u && eCurr -> v == v) {
+        eCurr -> link = eCurr -> link -> link;
+        return ;
+    }
+}
+
 /* 정점을 delete할 때 연관된 edge나 inc를 먼저 삭제(free)해야하는 것 아닌가?!???!!!!!??!!? 
 -> 맞음!!!!! 대신 그렇게 했을 때 수행 성능이 저하되므로 '비활성화' 방식을 택할 수도 있다 (어떻게.. 하는데..) */
 void deleteVertex(Graph *g, int v) {
@@ -170,43 +231,46 @@ void deleteVertex(Graph *g, int v) {
     // 지우고자 하는 타겟 정점이 첫 번째 정점일 때
     if (vxCurr -> v == v) {
         Edge *eCurr = g -> edge;
-        while (eCurr -> link) {
+        while (eCurr -> link != NULL) {
             if (eCurr -> u == v) {
-                break ;
-            }
+                deleteInc(g, vxCurr, eCurr);
+                deleteEdge(g, eCurr -> u, eCurr -> v);
+            } 
             eCurr = eCurr -> link;
         }
-        deleteEdge(g, eCurr -> u, eCurr -> v); // 노드 포인터를 전달하는게 낫지 않나
-        deleteInc(g, vxCurr, eCurr);
-
         g -> vertex = vxCurr -> link;
         free(vxCurr);
         return ;
     }
-    // 그 외
-    while (vxCurr -> link -> link != NULL) {
+    // 중간
+    while (vxCurr -> link != NULL) {
         if (vxCurr -> link -> v == v) {
-            break ;
+            Edge *eCurr = g -> edge;
+            while (eCurr -> link != NULL) {
+                if (eCurr -> u == v) {
+                    deleteInc(g, vxCurr, eCurr);
+                    deleteEdge(g, eCurr -> u, eCurr -> v);
+                }
+                eCurr = eCurr -> link;
+            }
+            vxCurr -> link = vxCurr -> link -> link;
+            return ;
         }
         vxCurr = vxCurr -> link;
     }
-    Edge *eCurr = g -> edge;
-    while (eCurr -> link) {
-        if (eCurr -> u == v) {
-            break ;
+    // 마지막
+    if (vxCurr -> v == v) {
+        Edge *eCurr = g -> edge;
+        while (eCurr -> link != NULL) {
+            if (eCurr -> u == v) {
+                deleteInc(g, vxCurr, eCurr);
+                deleteEdge(g, eCurr -> u, eCurr -> v);
+            }
+            eCurr = eCurr -> link;
         }
-        eCurr = eCurr -> link;
+        vxCurr -> link = vxCurr -> link -> link;
+        return ;
     }
-    deleteEdge(g, eCurr -> u, eCurr -> v);
-    deleteInc(g, vxCurr, eCurr);
-
-    vxCurr -> link = vxCurr -> link -> link;
-    free(vxCurr);
-    return ;
-}
-
-void deleteEdge(Graph *g, int u, int v) {
-
 }
 
 int main() {
